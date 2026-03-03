@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting Pro - Cantera de Héroes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #e9ecef; display: flex; padding: 20px; gap: 30px; justify-content: center; flex-wrap: wrap; }
+        
+        /* Panel de Controles */
+        #controls { background: white; padding: 20px; border-radius: 15px; width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.2rem; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .pos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; padding: 8px; border-radius: 8px; background: #f8f9fa; }
+        .pos-label { grid-column: 1 / span 2; font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+        
+        input { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; outline: none; box-sizing: border-box; }
+        .file-label { display: block; background: #f37021; color: white; padding: 10px; text-align: center; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+
+        .download-btn { width: 100%; padding: 15px; background-color: #008f39; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        .download-btn:hover { background-color: #00702d; }
+
+        /* Campo de Fútbol */
+        #canvas-container { position: relative; width: 500px; height: 720px; background-color: #1e5631; border: 6px solid #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .pitch-line { position: absolute; border: 2px solid rgba(255,255,255,0.5); }
+        #half-line { width: 100%; top: 50%; left: 0; border-top: 2px solid rgba(255,255,255,0.5); }
+        #center-circle { width: 140px; height: 140px; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #area-top { width: 280px; height: 110px; top: -2px; left: 50%; transform: translateX(-50%); border-top: none; }
+        #area-bottom { width: 280px; height: 110px; bottom: -2px; left: 50%; transform: translateX(-50%); border-bottom: none; }
+
+        /* Logo y Título */
+        #club-logo-display { position: absolute; top: 15px; right: 15px; width: 70px; height: 70px; object-fit: contain; z-index: 20; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+        #team-title { position: absolute; top: 30px; left: 0; width: 100%; text-align: center; color: #fff; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 2px 2px 5px rgba(0,0,0,0.7); z-index: 10; padding: 0 10px; box-sizing: border-box; }
+
+        /* Jugadores con colores EFC y fuentes más grandes */
+        .player-unit { position: absolute; text-align: center; width: 120px; transform: translate(-50%, -50%); z-index: 5; }
+        .dot { width: 26px; height: 26px; background: #f37021; border: 2.5px solid #fff; border-radius: 50%; margin: 0 auto 6px auto; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .gk .dot { background: #f1c40f; }
+        
+        .name-box { background: rgba(0,0,0,0.75); padding: 4px 8px; border-radius: 6px; display: inline-block; min-width: 100px; border: 1px solid rgba(255,255,255,0.2); }
+        .starter { color: #fff; font-size: 15px; font-weight: bold; display: block; line-height: 1.2; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .sub { color: #00ff6a; font-size: 12px; font-style: italic; display: block; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 3px; padding-top: 2px; }
+
+        /* Posiciones 1-4-2-3-1 ajustadas por el nuevo tamaño */
+        #pos-GK { top: 92%; left: 50%; }
+        #pos-DFI { top: 78%; left: 18%; }
+        #pos-DFC1 { top: 81%; left: 39%; }
+        #pos-DFC2 { top: 81%; left: 61%; }
+        #pos-DFD { top: 78%; left: 82%; }
+        #pos-MCD1 { top: 63%; left: 36%; }
+        #pos-MCD2 { top: 63%; left: 64%; }
+        #pos-MI { top: 43%; left: 18%; }
+        #pos-MCO { top: 46%; left: 50%; }
+        #pos-MD { top: 43%; left: 82%; }
+        #pos-DC { top: 22%; left: 50%; }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <h2>Análisis de Nómina</h2>
+        
+        <label class="file-label" for="logo-upload">📸 Cargar Escudo EFC</label>
+        <input type="file" id="logo-upload" accept="image/*" style="display:none" onchange="loadLogo(event)">
+
+        <div style="margin-bottom: 20px;">
+            <label class="pos-label">Equipo / Categoría</label>
+            <input type="text" id="in-team" placeholder="Ej: ENVIGADO FC - SUB 17" onkeyup="sync()">
+        </div>
+
+        <div id="inputs-container"></div>
+
+        <button class="download-btn" onclick="saveImage()">⬇️ Descargar Reporte PNG</button>
+    </div>
+
+    <div id="canvas-container">
+        <img id="club-logo-display" src="" style="display:none;">
+        <div id="team-title">EQUIPO</div>
+        <div class="pitch-line" id="half-line"></div>
+        <div class="pitch-line" id="center-circle"></div>
+        <div class="pitch-line" id="area-top"></div>
+        <div class="pitch-line" id="area-bottom"></div>
+
+        <div id="players-on-pitch"></div>
+    </div>
+
+    <script>
+        const posiciones = [
+            {id: 'GK', label: 'Portero', class: 'gk'},
+            {id: 'DFI', label: 'Lateral Izq', class: ''},
+            {id: 'DFC1', label: 'Central Izq', class: ''},
+            {id: 'DFC2', label: 'Central Der', class: ''},
+            {id: 'DFD', label: 'Lateral Der', class: ''},
+            {id: 'MCD1', label: 'Pivote 1', class: ''},
+            {id: 'MCD2', label: 'Pivote 2', class: ''},
+            {id: 'MI', label: 'Volante Izq', class: ''},
+            {id: 'MCO', label: 'Enganche', class: ''},
+            {id: 'MD', label: 'Volante Der', class: ''},
+            {id: 'DC', label: 'Delantero', class: ''}
+        ];
+
+        const inputsDiv = document.getElementById('inputs-container');
+        const pitchDiv = document.getElementById('players-on-pitch');
+
+        posiciones.forEach(p => {
+            inputsDiv.innerHTML += `
+                <div class="pos-row">
+                    <span class="pos-label">${p.label}</span>
+                    <input type="text" id="tit-${p.id}" placeholder="Titular" onkeyup="sync()">
+                    <input type="text" id="sup-${p.id}" placeholder="Suplente" onkeyup="sync()">
+                </div>
+            `;
+            pitchDiv.innerHTML += `
+                <div class="player-unit ${p.class}" id="pos-${p.id}">
+                    <div class="dot"></div>
+                    <div class="name-box">
+                        <span class="starter" id="lbl-tit-${p.id}">-</span>
+                        <span class="sub" id="lbl-sup-${p.id}">-</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        function loadLogo(event) {
+            const output = document.getElementById('club-logo-display');
+            output.src = URL.createObjectURL(event.target.files[0]);
+            output.style.display = 'block';
+        }
+
+        function sync() {
+            document.getElementById('team-title').innerText = document.getElementById('in-team').value || "EQUIPO";
+            posiciones.forEach(p => {
+                const t = document.getElementById('tit-' + p.id).value;
+                const s = document.getElementById('sup-' + p.id).value;
+                document.getElementById('lbl-tit-' + p.id).innerText = t || "-";
+                document.getElementById('lbl-sup-' + p.id).innerText = s ? s : "";
+            });
+        }
+
+        function saveImage() {
+            const container = document.getElementById("canvas-container");
+            const team = document.getElementById('in-team').value || 'analisis';
+            
+            html2canvas(container, { 
+                scale: 3, 
+                useCORS: true,
+                backgroundColor: null 
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Nomina_${team.replace(/\s+/g, '_')}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
