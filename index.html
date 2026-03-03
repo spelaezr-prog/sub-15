@@ -3,49 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scouting EFC - Cantera de Héroes</title>
+    <title>Pizarra EFC - Cantera de Héroes</title>
+    
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/en/thumb/5/52/Envigado_FC_logo.svg/1200px-Envigado_FC_logo.svg.png">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/en/thumb/5/52/Envigado_FC_logo.svg/1200px-Envigado_FC_logo.svg.png">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --efc-orange: #f37021; --efc-green: #008f39; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 15px; color: white; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background-color: #121212; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 15px;
+            color: white;
+        }
 
-        /* Barra de herramientas */
-        .toolbar { width: 100%; max-width: 500px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .btn-download { background: var(--efc-green); color: white; padding: 12px 40px; border: none; border-radius: 50px; font-weight: 900; cursor: pointer; font-size: 16px; text-transform: uppercase; width: 100%; }
-        .setup-zone { background: #333; padding: 10px; border-radius: 10px; font-size: 12px; text-align: center; width: 100%; border: 1px dashed var(--efc-orange); }
+        .toolbar {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
 
-        /* Cancha */
+        .btn-download { 
+            background: var(--efc-green); 
+            color: white; 
+            padding: 12px 40px; 
+            border: none; 
+            border-radius: 50px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 143, 57, 0.4);
+        }
+
+        .setup-zone { 
+            background: #222; 
+            padding: 10px; 
+            border-radius: 10px; 
+            font-size: 12px; 
+            text-align: center; 
+            width: 100%; 
+            border: 1px dashed var(--efc-orange);
+            box-sizing: border-box;
+        }
+
         #canvas-wrapper { width: 100%; max-width: 500px; position: relative; }
-        #canvas-container { position: relative; width: 100%; aspect-ratio: 500 / 720; background-color: #1a4d2e; border: 5px solid #fff; border-radius: 12px; overflow: hidden; }
+        
+        #canvas-container { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 500 / 720; 
+            background-color: #1a4d2e; 
+            border: 5px solid #fff; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); 
+        }
 
-        /* Escudo y Título */
-        #club-logo { position: absolute; top: 2.5%; right: 3.5%; width: 18%; height: auto; z-index: 25; display: none; }
-        #team-title { position: absolute; top: 4.5%; width: 100%; text-align: center; color: #fff; font-size: 26px; font-weight: 900; text-transform: uppercase; text-shadow: 0 3px 6px #000; z-index: 10; outline: none; box-sizing: border-box; padding: 0 60px; }
-
-        /* Líneas de campo */
+        /* Líneas del campo */
         .pitch-line { position: absolute; border: 2.5px solid rgba(255,255,255,0.4); pointer-events: none; }
         #half-line { width: 100%; top: 50%; border-top: 2.5px solid rgba(255,255,255,0.4); }
         #center-circle { width: 30%; aspect-ratio: 1; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         #area-top { width: 56%; height: 16%; top: -2px; left: 50%; transform: translateX(-50%); border-top: none; }
         #area-bottom { width: 56%; height: 16%; bottom: -2px; left: 50%; transform: translateX(-50%); border-bottom: none; }
 
+        /* Escudo EFC */
+        #club-logo { 
+            position: absolute; 
+            top: 2.5%; 
+            right: 3.5%; 
+            width: 18%; 
+            height: auto; 
+            z-index: 25; 
+            display: none;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+        
+        /* Título */
+        #team-title { 
+            position: absolute; 
+            top: 4.5%; 
+            width: 100%; 
+            text-align: center; 
+            color: #fff; 
+            font-size: 26px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            text-shadow: 0 4px 8px #000; 
+            z-index: 10; 
+            outline: none; 
+            box-sizing: border-box; 
+            padding: 0 60px;
+        }
+
         /* Jugadores */
         .player-unit { position: absolute; text-align: center; width: 24%; transform: translate(-50%, -50%); z-index: 5; }
-        .dot { width: 30px; height: 30px; background: var(--efc-orange); border: 2.5px solid #fff; border-radius: 50%; margin: 0 auto 6px auto; }
+        .dot { 
+            width: 32px; 
+            height: 32px; 
+            background: var(--efc-orange); 
+            border: 3px solid #fff; 
+            border-radius: 50%; 
+            margin: 0 auto 6px auto; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
         .gk .dot { background: #f1c40f; }
-        .name-box { background: rgba(0,0,0,0.85); padding: 5px; border-radius: 8px; width: 110%; border: 1.5px solid rgba(255,255,255,0.2); }
-        .starter { color: #fff; font-size: 16px; font-weight: 800; display: block; outline: none; }
-        .sub { color: #00ff6a; font-size: 12px; font-style: italic; display: block; border-top: 1px solid rgba(255,255,255,0.3); margin-top: 4px; outline: none; }
+        
+        .name-box { 
+            background: rgba(0,0,0,0.85); 
+            padding: 6px; 
+            border-radius: 8px; 
+            width: 110%; 
+            border: 1.5px solid rgba(255,255,255,0.2); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
 
-        /* Posiciones */
-        #pos-GK { top: 92%; left: 50%; } #pos-DFI { top: 78%; left: 18%; } #pos-DFC1 { top: 81%; left: 39%; } #pos-DFC2 { top: 81%; left: 61%; } #pos-DFD { top: 78%; left: 82%; } #pos-MCD1 { top: 63%; left: 36%; } #pos-MCD2 { top: 63%; left: 64%; } #pos-MI { top: 43%; left: 18%; } #pos-MCO { top: 46%; left: 50%; } #pos-MD { top: 43%; left: 82%; } #pos-DC { top: 22%; left: 50%; }
+        .starter { 
+            color: #fff; 
+            font-size: 17px; 
+            font-weight: 800; 
+            display: block; 
+            outline: none;
+            white-space: nowrap;
+        }
+
+        .sub { 
+            color: #00ff6a; 
+            font-size: 13px; 
+            font-style: italic; 
+            display: block; 
+            border-top: 1px solid rgba(255,255,255,0.3); 
+            margin-top: 4px; 
+            padding-top: 2px;
+            outline: none;
+            min-height: 14px;
+        }
+
+        /* NUEVAS COORDENADAS 1-4-2-3-1 ESPACIADAS */
+        #pos-GK   { top: 92%; left: 50%; }
+        
+        /* Defensas: Centrales más abiertos y bajos, Laterales más altos y abiertos */
+        #pos-DFI  { top: 74%; left: 14%; } 
+        #pos-DFC1 { top: 83%; left: 34%; } 
+        #pos-DFC2 { top: 83%; left: 66%; } 
+        #pos-DFD  { top: 74%; left: 86%; } 
+        
+        /* Doble Pivote: Más arriba */
+        #pos-MCD1 { top: 58%; left: 35%; } 
+        #pos-MCD2 { top: 58%; left: 65%; } 
+        
+        /* Línea de 3: Más arriba y abierta */
+        #pos-MI   { top: 36%; left: 14%; } 
+        #pos-MCO  { top: 40%; left: 50%; } 
+        #pos-MD   { top: 36%; left: 86%; } 
+        
+        /* Delantero: Más cerca de portería rival */
+        #pos-DC   { top: 16%; left: 50%; }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
         <div id="setup-ui" class="setup-zone">
-            <p>Configura el escudo por única vez para que sea permanente:</p>
+            <p>Configura el escudo de Envigado una última vez:</p>
             <input type="file" id="logo-input" accept="image/*" onchange="saveLogoPermanently(event)">
         </div>
         <button class="btn-download" onclick="saveImage()">Descargar</button>
@@ -65,20 +196,19 @@
 
     <script>
         const posiciones = [
-            {id: 'GK', class: 'gk', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'DFI', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'DFC1', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'DFC2', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'DFD', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'MCD1', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'MCD2', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'MI', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'MCO', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'MD', class: '', t: 'TITULAR', s: 'SUPLENTE'},
-            {id: 'DC', class: '', t: 'TITULAR', s: 'SUPLENTE'}
+            {id: 'GK', class: 'gk', t: 'PORTERO', s: 'SUPLENTE'},
+            {id: 'DFI', class: '', t: 'LATERAL IZQ', s: 'SUPLENTE'},
+            {id: 'DFC1', class: '', t: 'CENTRAL IZQ', s: 'SUPLENTE'},
+            {id: 'DFC2', class: '', t: 'CENTRAL DER', s: 'SUPLENTE'},
+            {id: 'DFD', class: '', t: 'LATERAL DER', s: 'SUPLENTE'},
+            {id: 'MCD1', class: '', t: 'PIVOTE 1', s: 'SUPLENTE'},
+            {id: 'MCD2', class: '', t: 'PIVOTE 2', s: 'SUPLENTE'},
+            {id: 'MI', class: '', t: 'EXTREMO IZQ', s: 'SUPLENTE'},
+            {id: 'MCO', class: '', t: 'ENGANCHE', s: 'SUPLENTE'},
+            {id: 'MD', class: '', t: 'EXTREMO DER', s: 'SUPLENTE'},
+            {id: 'DC', class: '', t: 'DELANTERO', s: 'SUPLENTE'}
         ];
 
-        // Cargar logo guardado al iniciar
         window.onload = () => {
             const savedLogo = localStorage.getItem('efc_logo_permanent');
             if (savedLogo) {
@@ -105,9 +235,8 @@
             const file = event.target.files[0];
             const reader = new FileReader();
             reader.onloadend = function() {
-                const base64String = reader.result;
-                localStorage.setItem('efc_logo_permanent', base64String);
-                location.reload(); // Recarga para aplicar
+                localStorage.setItem('efc_logo_permanent', reader.result);
+                location.reload();
             };
             reader.readAsDataURL(file);
         }
@@ -115,7 +244,11 @@
         function saveImage() {
             const container = document.getElementById("canvas-container");
             const team = document.getElementById('team-title').innerText;
-            html2canvas(container, { scale: 3, useCORS: true, backgroundColor: "#1a4d2e" }).then(canvas => {
+            html2canvas(container, { 
+                scale: 3, 
+                useCORS: true, 
+                backgroundColor: "#1a4d2e" 
+            }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Nomina_${team.replace(/\s+/g, '_')}.png`;
                 link.href = canvas.toDataURL("image/png");
@@ -125,6 +258,7 @@
     </script>
 </body>
 </html>
+
 
 
 
